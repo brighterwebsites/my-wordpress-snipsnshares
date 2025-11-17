@@ -83,4 +83,4 @@ That cleans up the start of the XML so browsers and crawlers parse it properly.
 
 ---
 
-If you want, I can merge this cleaning function into the earlier “Repair Sitemap” MU plugin so you only have **one** file managing sitemap fixes instead of two. Would you like me to show that unified version?
+## Test - works - also can check this is the issue for sitemapts not resolving by diabling themes and refresh sitemap
