@@ -1,0 +1,86 @@
+That XML parse error —
+
+> “error on line 1 at column 25: AttValue: " or ' expected”
+> — almost always means **there’s an invisible or invalid character before or inside the XML declaration**, usually whitespace, a BOM (Byte Order Mark), or an accidental echo from a plugin.
+
+To fix it, you can use this exact **MU plugin code** to clean any stray characters, whitespace, or BOMs *before* WordPress outputs XML content such as `/wp-sitemap.xml`.
+
+---
+
+### ✅ Safe MU plugin to remove whitespace / stray characters from XML
+
+1. Create this file:
+
+   ```
+   /wp-content/mu-plugins/fix-xml-whitespace.php
+   ```
+
+2. Paste this inside:
+
+```php
+<?php
+/**
+ * Plugin Name: Fix XML Whitespace / BOM Output
+ * Description: Cleans invisible characters and whitespace before XML output (useful for sitemap or feed errors).
+ * Author: Nessy (Brighter Websites)
+ */
+
+add_action('init', function() {
+    // Start output buffering early to clean the buffer before sending it
+    ob_start(function($output) {
+        // Trim any leading BOM or invisible whitespace before XML declaration
+        if (strpos($output, '<?xml') !== false) {
+            // Remove UTF-8 BOM if present
+            $output = preg_replace('/^\xEF\xBB\xBF/', '', $output);
+            // Remove any whitespace/newlines before the XML declaration
+            $output = preg_replace('/^\s+<\?xml/', '<?xml', $output);
+        }
+        return $output;
+    });
+});
+```
+
+---
+
+### 🧭 How it works
+
+* It hooks early in WordPress (`init`) and starts buffering all output.
+* When the page finishes rendering, it checks for the first occurrence of `<?xml`.
+* It strips:
+
+  * Any UTF-8 BOM characters (`EF BB BF`)
+  * Any spaces, tabs, or newlines before the XML tag
+
+That cleans up the start of the XML so browsers and crawlers parse it properly.
+
+---
+
+### 🔧 Steps to apply
+
+1. Upload the file to `wp-content/mu-plugins/`
+2. Refresh `https://yourdomain.com/wp-sitemap.xml`
+3. The red error box should disappear and the XML should render normally
+4. Run a quick header check:
+
+   ```bash
+   curl -I https://yourdomain.com/wp-sitemap.xml
+   ```
+
+   You should see:
+
+   ```
+   HTTP/2 200
+   content-type: application/xml; charset=UTF-8
+   ```
+
+---
+
+### ⚠️ Notes
+
+* This fix is safe and lightweight; it runs only when XML content is output.
+* You can keep it permanently — it prevents this issue from reappearing after cloning, restoring, or CDN caching.
+* It works regardless of whether you use the core sitemap or SEOPress’s.
+
+---
+
+If you want, I can merge this cleaning function into the earlier “Repair Sitemap” MU plugin so you only have **one** file managing sitemap fixes instead of two. Would you like me to show that unified version?
